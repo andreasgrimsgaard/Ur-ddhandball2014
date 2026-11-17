@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Håndball – kampføring</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F1F4F8;--sf:#fff;--ink:#14212F;--mut:#5E6D7E;--ln:#D3DBE5;--bl:#1B5CA6;--blt:#E3EDF9;--pos:#1B8556;--post:#DDF3E8;--neg:#C23B2B;--negt:#FBE4E0;--gl:#E8890C;--gt:#FFF0D9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1620;--sf:#172433;--ink:#E8EEF5;--mut:#93A3B5;--ln:#2A3B4F;--bl:#6EA8EC;--blt:#1C3350;--pos:#4CC38A;--post:#14382A;--neg:#F0806F;--negt:#43211D;--gl:#F5A83C;--gt:#4A3513}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Barlow,system-ui,sans-serif}
+body{min-height:100%}
+#app{max-width:760px;margin:0 auto;padding:0 14px 40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:12px 0 8px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font:700 26px/1 "Barlow Condensed",Impact,sans-serif;margin:0}
+h2{font:700 22px/1.1 "Barlow Condensed",Impact,sans-serif;margin:18px 0 8px}
+nav{display:flex;gap:4px;background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:3px}
+nav button{border:0;background:none;color:var(--mut);font:600 15px Barlow,sans-serif;padding:8px 11px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--bl);color:#fff}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gl);outline-offset:2px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:14px;margin:10px 0}
+.btn{border:1px solid var(--ln);background:var(--sf);border-radius:10px;padding:11px 16px;font-weight:600;cursor:pointer}
+.btn.pr{background:var(--bl);border-color:var(--bl);color:#fff}
+.btn.dg{color:var(--neg);border-color:var(--neg)}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=number],input[type=password],select{border:1px solid var(--ln);background:var(--bg);border-radius:10px;padding:11px 12px;min-width:0}
+label.f{display:block;font-weight:600;margin-bottom:4px}
+.muted{color:var(--mut)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.clock{font:700 44px/1 "Barlow Condensed",Impact,sans-serif;font-variant-numeric:tabular-nums}
+.score{font:700 30px/1 "Barlow Condensed",Impact,sans-serif;color:var(--gl)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pl{display:flex;align-items:center;gap:10px;text-align:left;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;cursor:pointer;min-height:64px}
+.pl .no{font:700 34px/1 "Barlow Condensed",Impact,sans-serif;color:var(--bl);min-width:36px;text-align:center}
+.pl .nm{font-weight:600;line-height:1.15}
+.pl small{display:block;color:var(--mut);font-weight:400}
+.sheet{position:fixed;inset:0;background:rgba(10,18,28,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet>div{background:var(--sf);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px))}
+.evs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.ev{border:1px solid var(--ln);border-radius:12px;padding:12px 10px;text-align:left;cursor:pointer;background:var(--bg);display:flex;gap:10px;align-items:center}
+.ev b,.code{font:700 20px/1 "Barlow Condensed",Impact,sans-serif;min-width:34px}
+.ev.p b,.code.p{color:var(--pos)}.ev.n b,.code.n{color:var(--neg)}
+.ev.g{background:var(--gt);border-color:var(--gl)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:56px 40px 1fr;gap:8px;align-items:baseline;padding:8px 10px;border-left:4px solid var(--ln);background:var(--sf);margin-bottom:4px;border-radius:0 8px 8px 0}
+.tl li.p{border-left-color:var(--pos)}.tl li.n{border-left-color:var(--neg)}.tl li.g{border-left-color:var(--gl);background:var(--gt)}
+.tl time{font-variant-numeric:tabular-nums;color:var(--mut)}
+.tl.live li{grid-template-columns:56px 40px 1fr auto;align-items:center}
+.tl.live .btn{padding:7px 12px}
+.tl li.mk{border-left-color:var(--bl);background:var(--blt);font-weight:600}
+.tl em{display:block;font-style:normal;color:var(--mut);font-size:14px}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--ln)}
+th:first-child,td:first-child{text-align:left}
+th{font:700 16px "Barlow Condensed",sans-serif}
+td.z{color:var(--ln)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;display:none;font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;background:var(--sf)}
+.chk input{width:20px;height:20px}
+.li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln)}
+.lg{max-width:400px;margin:40px auto}.err{color:var(--neg);min-height:1.4em;margin:6px 0}.qr{width:200px;height:200px;background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
+@media print{header,.noprint{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script>
+// FYLL INN fra Supabase: Project Settings > API (bruk publishable-nøkkelen, aldri service_role)
+const SB_URL="https://xliacezvogmnlsiwnfrd.supabase.co",SB_KEY="sb_publishable_W-_gqMOQ1UXTsU-u33tiOQ_QJVtRrtF";
+const EV=[["M","Mål","p"],["SM","Straffemål","p"],["A","Assist","p"],["A+","Angrepsinitiativ","p"],["D+","Defensivt initiativ","p"],["FP","Feilpasning","n"],["MF","Mottaksfeil","n"],["D-","Defensiv feil","n"],["U","Utvisning","n"],["SB","Straffebom","n"]];
+const T=id=>db.evs.find(x=>x.id===id)||{id,c:id,n:id,k:"n",g:false};
+const KIND=new Proxy({},{get:(_,id)=>T(id).k});
+const isG=id=>T(id).g;
+let db={players:[],match:null,history:[]};
+const SB=supabase.createClient(SB_URL,SB_KEY);
+let st=null;
+const save=()=>{clearTimeout(st);st=setTimeout(async()=>{const {error}=await SB.from("team_data").upsert({id:1,data:db});if(error)toast("Kunne ikke lagre: "+error.message)},500)};
+function norm(){
+if(!db.evs)db.evs=EV.map(e=>({id:e[0],c:e[0],n:e[1],k:e[2],g:e[0]==="M"||e[0]==="SM"}));
+if(db.match){db.match.marks=db.match.marks||{};if(!db.match.phase)db.match.phase=(db.match.running||db.match.elapsed)?"h1":"pre"}
+}
+const PH={pre:"Før kampen",h1:"1. omgang",ht:"Pause",h2:"2. omgang",ft:"Kampen er over"};
+const PB=m=>{const x={pre:["ph1","Start 1. omgang"],h1:["pe1",arm?"Trykk igjen for å bekrefte":"Avslutt 1. omgang"],ht:["ph2","Start 2. omgang"],h2:["pe2",arm?"Trykk igjen for å bekrefte":"Avslutt 2. omgang"],ft:["end",arm?"Trykk igjen for å avslutte":"Avslutt kamp"]}[m.phase];return `<button class="btn ${m.phase==="ft"?"dg":"pr"}" data-a="${x[0]}">${x[1]}</button>`};
+let tab="match",sel=null,opp="",pick=null,rep=null,arm=false,rview="one",agg=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cur=m=>m.elapsed+(m.running?Date.now()-m.startedAt:0);
+const fmt=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+const toast=t=>{const e=document.getElementById("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display="none",1800)};
+const goals=m=>m.events.filter(e=>isG(e.e)).length;
+const pn=(m,id)=>{const p=m.squad.find(x=>x.id===id);return p?(p.no?"#"+p.no+" ":"")+p.name:"Ukjent"};
+
+function TBL(ms){
+ const used=new Set(ms.flatMap(m=>m.events.map(e=>e.e)));
+ const cols=db.evs.filter(d=>!d.x||used.has(d.id));
+ const P={};
+ ms.forEach(m=>{m.squad.forEach(p=>{P[p.id]=P[p.id]||{n:pn(m,p.id),no:+p.no||999,k:0,c:{}};P[p.id].k++});m.events.forEach(e=>{const r=P[e.p];if(r)r.c[e.e]=(r.c[e.e]||0)+1})});
+ const rows=Object.values(P).filter(r=>Object.keys(r.c).length).sort((a,b)=>a.no-b.no);
+ const tot={};rows.forEach(r=>cols.forEach(d=>tot[d.id]=(tot[d.id]||0)+(r.c[d.id]||0)));
+ const mu=ms.length>1;
+ return `<table><tr><th>Spiller</th>${mu?"<th>K</th>":""}${cols.map(d=>`<th title="${esc(d.n)}">${esc(d.c)}</th>`).join("")}</tr>${rows.map(r=>`<tr><td>${esc(r.n)}</td>${mu?`<td>${r.k}</td>`:""}${cols.map(d=>r.c[d.id]?`<td><b>${r.c[d.id]}</b></td>`:'<td class="z">·</td>').join("")}</tr>`).join("")}<tr><td><b>Sum</b></td>${mu?"<td></td>":""}${cols.map(d=>`<td><b>${tot[d.id]||0}</b></td>`).join("")}</tr></table>`;
+}
+
+function VA(){
+ const L=db.history;
+ if(!L.length)return `<div class="card muted">Ingen ferdige kamper ennå.</div>`;
+ if(!agg)agg=new Set(L.map(x=>x.id));
+ const ms=L.filter(x=>agg.has(x.id));
+ return `<h2>Velg kamper</h2><div class="row noprint" style="margin-bottom:8px"><button class="btn" data-a="agall">Alle</button><button class="btn" data-a="agnone">Ingen</button></div><div class="grid">${L.slice().reverse().map(x=>`<label class="chk"><input type="checkbox" data-a="ag" data-v="${x.id}" ${agg.has(x.id)?"checked":""}><span>${esc(x.date)} mot ${esc(x.opp||"motstander")}<br><small class="muted">${goals(x)} mål</small></span></label>`).join("")}</div>
+ <h2>Samlet statistikk</h2><div class="card"><b style="font-size:20px">${ms.length} kamper</b> <span class="muted">· ${ms.reduce((s,x)=>s+goals(x),0)} mål · ${ms.reduce((s,x)=>s+x.events.length,0)} hendelser</span></div>${ms.length?`<div class="card sc">${TBL(ms)}</div>`:""}<div class="row noprint"><button class="btn" data-a="print">Skriv ut</button></div>`;
+}
+
+function VE(){
+ const opt=k=>`<option value="p" ${k==="p"?"selected":""}>Positiv</option><option value="n" ${k==="n"?"selected":""}>Negativ</option>`;
+ return `<h2>Hendelser</h2><div class="card"><div class="row"><input type="text" id="ec" placeholder="Kode" style="width:84px"><input type="text" id="en" placeholder="Navn" style="flex:1 1 160px"><select id="ek">${opt("p")}</select></div><div class="row" style="margin-top:8px"><label class="row"><input type="checkbox" id="eg"> Teller som mål</label><button class="btn pr" data-a="adde">Legg til hendelse</button></div></div>
+ <div class="card">${db.evs.filter(d=>!d.x).map(d=>`<div class="li" style="gap:6px;flex-wrap:wrap"><input type="text" value="${esc(d.c)}" data-eid="${d.id}" data-f="c" style="width:70px"><input type="text" value="${esc(d.n)}" data-eid="${d.id}" data-f="n" style="flex:1 1 140px"><select data-eid="${d.id}" data-f="k">${opt(d.k)}</select><label class="row"><input type="checkbox" data-eid="${d.id}" data-f="g" ${d.g?"checked":""}> Mål</label><button class="btn dg" data-a="deld" data-v="${d.id}">Fjern</button></div>`).join("")}</div><p class="muted">Endringer lagres med en gang og gjelder også i tidligere rapporter. Fjernede hendelser forsvinner fra knappene, men gamle registreringer beholdes.</p>`;
+}
+
+function VP(){
+ return `<h2>Spillerbase</h2><div class="card"><div class="row"><input type="text" id="pn" placeholder="Navn" style="flex:1 1 160px"><input type="number" id="pno" placeholder="Nr" style="width:84px" inputmode="numeric"><button class="btn pr" data-a="addp">Legg til spiller</button></div></div>
+ <div class="card">${db.players.length?db.players.slice().sort((a,b)=>(+a.no||999)-(+b.no||999)).map(p=>`<div class="li"><span><b>${esc(p.no||"–")}</b>&nbsp; ${esc(p.name)}</span><button class="btn dg" data-a="delp" data-v="${p.id}">Fjern</button></div>`).join(""):'<span class="muted">Ingen spillere ennå. Legg til navn og draktnummer over.</span>'}</div>`;
+}
+
+function VM(){
+ const m=db.match;
+ if(!m){
+  if(!db.players.length)return `<h2>Ny kamp</h2><div class="card">Legg til spillere i spillerbasen før du starter en kamp.<div style="margin-top:10px"><button class="btn pr" data-a="tab" data-v="players">Gå til spillere</button></div></div>`;
+  if(!pick)pick=new Set(db.players.map(p=>p.id));
+  return `<h2>Ny kamp</h2><div class="card"><label class="f" for="opp">Motstander</label><input type="text" id="opp" value="${esc(opp)}" placeholder="Lagnavn" style="width:100%"></div>
+  <h2>Hvem er med?</h2><div class="grid">${db.players.map(p=>`<label class="chk"><input type="checkbox" data-a="pk" data-v="${p.id}" ${pick.has(p.id)?"checked":""}><span><b>${esc(p.no||"–")}</b> ${esc(p.name)}</span></label>`).join("")}</div>
+  <div style="margin-top:14px"><button class="btn pr" data-a="start" ${pick.size?"":"disabled"}>Start kamp (${pick.size} spillere)</button></div>`;
+ }
+ const cnt=id=>m.events.filter(e=>e.p===id).length;
+ let h=`<div class="card"><div class="bar"><div><div class="muted">Mot ${esc(m.opp||"motstander")} · ${PH[m.phase]}</div><div class="clock" id="clk">${fmt(cur(m))}</div></div><div class="score">${goals(m)} mål</div></div>
+ <div class="row" style="margin-top:10px">${PB(m)}${m.phase==="h1"||m.phase==="h2"?`<button class="btn" data-a="clock">${m.running?"Pause klokka":"Start klokka"}</button>`:""}<button class="btn" data-a="undo" ${m.events.length?"":"disabled"}>Angre siste</button></div></div>
+ <div class="grid">${m.squad.map(p=>`<button class="pl" data-a="sel" data-v="${p.id}"><span class="no">${esc(p.no||"–")}</span><span class="nm">${esc(p.name)}<small>${cnt(p.id)} hendelser</small></span></button>`).join("")}</div>`;
+ h+=`<h2>Registrerte hendelser</h2>`+(m.events.length?`<ul class="tl live">${m.events.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<li class="${isG(e.e)?"g":KIND[e.e]}"><time>${fmt(e.t)}</time><b class="code ${KIND[e.e]}">${esc(T(e.e).c)}</b><span>${esc(pn(m,e.p))}<em>${esc(T(e.e).n)}</em></span><button class="btn dg" data-a="dele" data-v="${i}" aria-label="Slett hendelse">Slett</button></li>`).join("")}</ul>`:'<div class="card muted">Ingen hendelser ennå. Trykk på en spiller for å registrere.</div>');
+ if(sel){const p=m.squad.find(x=>x.id===sel);
+  h+=`<div class="sheet" data-a="close"><div><div class="bar"><b style="font-size:20px">${esc(pn(m,sel))}</b><button class="btn" data-a="close">Lukk</button></div><div class="evs">${db.evs.filter(d=>!d.x).map(d=>`<button class="ev ${d.k} ${d.g?"g":""}" data-a="ev" data-v="${d.id}"><b>${esc(d.c)}</b><span>${esc(d.n)}</span></button>`).join("")}</div></div></div>`;}
+ return h;
+}
+
+function VR(){
+ const sg=`<div class="row noprint" style="margin-top:6px"><button class="btn ${rview==="one"?"pr":""}" data-a="rv" data-v="one">Enkeltkamp</button><button class="btn ${rview==="all"?"pr":""}" data-a="rv" data-v="all">Flere kamper</button></div>`;
+ return sg+(rview==="all"?VA():VR1());
+}
+function VR1(){
+ const L=db.history;
+ if(!L.length)return `<h2>Rapport</h2><div class="card muted">Ingen ferdige kamper ennå. Rapporten dukker opp her når du avslutter en kamp.</div>`;
+ const m=L.find(x=>x.id===rep)||L[L.length-1];
+ const mk=m.marks||{},tot=mk.h2s>0?m.elapsed:(mk.h1e||0)+m.elapsed;
+ const ev=[...m.events.map(e=>({...e,h:e.h||1})),...[["h1s","Start 1. omgang",1,-1],["h1e","Slutt 1. omgang",1,9e12],["h2s","Start 2. omgang",2,-1],["h2e","Slutt 2. omgang",2,9e12]].filter(x=>mk[x[0]]!==undefined).map(x=>({mark:x[1],h:x[2],t:x[3],tm:mk[x[0]]}))].sort((a,b)=>(a.h-b.h)||(a.t-b.t));
+ return `<h2>Rapport</h2><div class="card"><div class="row noprint"><select id="rsel">${L.slice().reverse().map(x=>`<option value="${x.id}" ${x.id===m.id?"selected":""}>${esc(x.date)} mot ${esc(x.opp||"motstander")}</option>`).join("")}</select><button class="btn" data-a="print">Skriv ut</button></div>
+ <div style="margin-top:10px"><b style="font-size:20px">Mot ${esc(m.opp||"motstander")}</b> <span class="muted">${esc(m.date)} · ${fmt(tot)} spilt · ${goals(m)} mål (1. omgang ${m.events.filter(e=>isG(e.e)&&(e.h||1)===1).length}, 2. omgang ${m.events.filter(e=>isG(e.e)&&e.h===2).length}) · ${m.events.length} hendelser</span></div></div>
+ <h2>Tidslinje</h2>${ev.length?`<ul class="tl">${ev.map(e=>e.mark?`<li class="mk"><time>${fmt(e.tm)}</time><b></b><span>${e.mark}</span></li>`:`<li class="${isG(e.e)?"g":KIND[e.e]}"><time>${fmt(e.t)}</time><b class="code ${KIND[e.e]}">${esc(T(e.e).c)}</b><span>${esc(pn(m,e.p))}<em>${esc(T(e.e).n)}</em></span></li>`).join("")}</ul>`:'<div class="card muted">Ingen hendelser registrert.</div>'}
+ <h2>Per spiller</h2><div class="card sc">${TBL([m])}</div>`;
+}
+
+function R(){
+ let h=`<header><h1>Håndball – kampføring</h1><nav>${[["match","Kamp"],["players","Spillere"],["events","Hendelser"],["report","Rapport"]].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</nav><button class="btn noprint" data-a="out">Logg ut</button></header>`;
+ h+=tab==="players"?VP():tab==="events"?VE():tab==="report"?VR():VM();
+ document.getElementById("app").innerHTML=h;
+}
+
+document.addEventListener("click",ev=>{
+ const t=ev.target.closest("[data-a]");if(!t)return;
+ if(t.classList.contains("sheet")&&ev.target!==t)return;
+ const a=t.dataset.a,v=t.dataset.v,m=db.match;
+ if(a==="tab"){tab=v;sel=null;arm=false}
+ else if(a==="addp"){const n=document.getElementById("pn").value.trim(),no=document.getElementById("pno").value.trim();if(!n){toast("Skriv inn et navn");return}
+  db.players.push({id:"p"+Date.now(),name:n,no});save()}
+ else if(a==="delp"){db.players=db.players.filter(p=>p.id!==v);pick=null;save()}
+ else if(a==="pk"){pick.has(v)?pick.delete(v):pick.add(v)}
+ else if(a==="start"){db.match={id:"m"+Date.now(),opp:(document.getElementById("opp")||{}).value||opp,date:new Date().toLocaleDateString("nb-NO"),squad:db.players.filter(p=>pick.has(p.id)),events:[],elapsed:0,running:false,startedAt:0,phase:"pre",marks:{}};opp="";pick=null;save()}
+ else if(a==="clock"){if(m.running){m.elapsed=cur(m);m.running=false}else{m.startedAt=Date.now();m.running=true}save()}
+ else if(a==="sel"){sel=v}
+ else if(a==="close"){sel=null}
+ else if(a==="ev"){m.events.push({t:cur(m),p:sel,e:v,h:(m.phase==="ht"||m.phase==="h2"||m.phase==="ft")?2:1});toast(T(v).c+" · "+pn(m,sel)+" · "+fmt(cur(m)));sel=null;save()}
+ else if(a==="dele"){m.events.splice(+v,1);toast("Hendelse slettet");save()}
+ else if(a==="rv"){rview=v}
+ else if(a==="ag"){agg.has(v)?agg.delete(v):agg.add(v)}
+ else if(a==="agall"){agg=new Set(db.history.map(x=>x.id))}
+ else if(a==="agnone"){agg=new Set()}
+ else if(a==="adde"){const c=document.getElementById("ec").value.trim(),n=document.getElementById("en").value.trim();if(!c||!n){toast("Fyll inn kode og navn");return}db.evs.push({id:"e"+Date.now(),c,n,k:document.getElementById("ek").value,g:document.getElementById("eg").checked});save()}
+ else if(a==="deld"){const d=db.evs.find(x=>x.id===v);if(d)d.x=true;save()}
+ else if(a==="out"){SB.auth.signOut().then(()=>location.reload());return}
+ else if(a==="undo"){const e=m.events.pop();if(e)toast("Angret "+e.e);save()}
+ else if(a==="ph1"||a==="ph2"){const f=a==="ph1";m.marks[f?"h1s":"h2s"]=cur(m);m.phase=f?"h1":"h2";m.startedAt=Date.now();m.running=true;save()}
+ else if(a==="pe1"||a==="pe2"){if(!arm){arm=true;R();setTimeout(()=>{arm=false;R()},4000);return}
+  const f=a==="pe1";const d=cur(m);m.marks[f?"h1e":"h2e"]=d;m.elapsed=f?0:d;m.running=false;m.phase=f?"ht":"ft";arm=false;save()}
+ else if(a==="end"){if(!arm){arm=true;R();setTimeout(()=>{arm=false;R()},4000);return}
+  m.elapsed=cur(m);m.running=false;db.history.push(m);rep=m.id;if(agg)agg.add(m.id);db.match=null;arm=false;tab="report";save()}
+ else if(a==="print"){window.print();return}
+ R();
+});
+document.addEventListener("input",e=>{if(e.target.id==="opp")opp=e.target.value});
+document.addEventListener("change",e=>{const t=e.target;if(t.id==="rsel"){rep=t.value;R();return}
+ if(t.dataset.eid){const d=db.evs.find(x=>x.id===t.dataset.eid);if(!d)return;const f=t.dataset.f;
+  if(f==="g")d.g=t.checked;else if(f==="k")d.k=t.value;else{const v=t.value.trim();if(!v){t.value=d[f];return}d[f]=v}save();toast("Lagret")}});
+setInterval(()=>{const c=document.getElementById("clk");if(c&&db.match)c.textContent=fmt(cur(db.match))},500);
+const A=()=>document.getElementById("app");
+const box=h=>{A().innerHTML=`<div class="card lg"><h1>Håndball – kampføring</h1>${h}</div>`};
+function LOGIN(msg,em){
+ box(`<p class="muted">Logg inn for å fortsette.</p><div id="lf"><label class="f" for="lu">Brukernavn (e-post)</label><input type="text" id="lu" value="${esc(em||"")}" autocomplete="username" inputmode="email" style="width:100%"><label class="f" for="lp" style="margin-top:10px">Passord</label><input type="password" id="lp" autocomplete="current-password" style="width:100%"><div class="err" role="alert">${esc(msg||"")}</div><button class="btn pr" id="lb" type="button">Logg inn</button></div>`);
+ const go=async()=>{const em=document.getElementById("lu").value.trim(),b=document.getElementById("lb");b.disabled=true;b.textContent="Logger inn …";
+  try{const {error}=await SB.auth.signInWithPassword({email:em,password:document.getElementById("lp").value});
+   if(error)return LOGIN(error.message==="Invalid login credentials"?"Feil brukernavn eller passord.":"Innlogging feilet: "+error.message,em);
+   await boot()}catch(x){LOGIN("Innlogging feilet: "+x.message,em)}};
+ document.getElementById("lb").onclick=go;
+ document.getElementById("lf").onkeydown=e=>{if(e.key==="Enter")go()};
+}
+async function MFA(){
+ const {data:fs,error:le}=await SB.auth.mfa.listFactors();
+ if(le)return LOGIN("Kunne ikke hente tofaktor: "+le.message);
+ const f=fs&&fs.totp&&fs.totp[0];
+ let id,qr="";
+ if(f)id=f.id;else{
+  const {data,error}=await SB.auth.mfa.enroll({factorType:"totp",friendlyName:"app"+Date.now()});
+  if(error)return LOGIN("Kunne ikke sette opp tofaktor: "+error.message);
+  id=data.id;
+  qr=`<p>Skann QR-koden med en autentiseringsapp (for eksempel Microsoft Authenticator, Google Authenticator eller Authy), og skriv inn koden appen viser.</p><img class="qr" alt="QR-kode for tofaktor" src="${data.totp.qr_code}"><p class="muted">Kan du ikke skanne? Skriv inn nøkkelen manuelt: <b>${esc(data.totp.secret)}</b></p>`}
+ box(`${qr||'<p class="muted">Skriv inn den 6-sifrede koden fra autentiseringsappen.</p>'}<div id="mf"><label class="f" for="mc">Kode</label><input type="text" id="mc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="width:100%"><div class="err" role="alert"></div><button class="btn pr" id="mb" type="button">Bekreft</button></div>`);
+ const go=async()=>{try{const {error}=await SB.auth.mfa.challengeAndVerify({factorId:id,code:document.getElementById("mc").value.trim()});
+  if(error){document.querySelector(".err").textContent="Feil kode, prøv igjen. ("+error.message+")";return}
+  await start()}catch(x){document.querySelector(".err").textContent="Feil: "+x.message}};
+ document.getElementById("mb").onclick=go;
+ document.getElementById("mf").onkeydown=e=>{if(e.key==="Enter")go()};
+}
+async function start(){
+ const {data,error}=await SB.from("team_data").select("data").eq("id",1).maybeSingle();
+ if(error)return LOGIN("Kunne ikke hente data: "+error.message);
+ if(data&&data.data)db=data.data;
+ norm();tab=(db.match||db.players.length)?"match":"players";R();
+}
+async function boot(){
+ if(SB_URL.includes("DITT-PROSJEKT"))return box('<p class="err">Fyll inn Supabase-URL og nøkkel øverst i filen før du bruker appen.</p>');
+ const {data:{session}}=await SB.auth.getSession();
+ if(!session)return LOGIN();
+ const {data:l}=await SB.auth.mfa.getAuthenticatorAssuranceLevel();
+ if(l&&l.currentLevel==="aal2")start();else MFA();
+}
+boot().catch(x=>LOGIN("Feil ved oppstart: "+x.message));
+</script>
+</body>
+</html>
