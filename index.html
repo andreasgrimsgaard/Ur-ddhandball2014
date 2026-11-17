@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Urædd Håndball – kampføring</title>
 <meta name="theme-color" content="#0b1220">
+<link rel="icon" href="https://sagjjvpkxhgfpjnaqlgv.supabase.co/storage/v1/object/public/tenant-assets/51208bc7-cc9a-49bf-ac10-c452c0530472/logo.jpeg?t=1774872970253">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
 :root{--bg:#0b1220;--bg2:#101a2e;--sf:#141f35;--sf2:#1a2744;--ink:#EEF3FA;--mut:#8DA0BC;--ln:#25344f;--bl:#E4202D;--blt:#2a1a26;--pos:#3DDC97;--post:#12332a;--neg:#FF8A5B;--negt:#3a2218;--gl:#FFC53D;--gt:#33280f;--red:#E4202D;
@@ -17,6 +18,9 @@ body{min-height:100%}
 header{position:sticky;top:0;background:rgba(11,18,32,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;margin:0 -14px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--ln)}
 header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(100deg,var(--red) 0 38%,transparent 38%)}
 .brand{display:flex;align-items:center;gap:10px}
+.logo{width:46px;height:46px;border-radius:10px;background:#fff;object-fit:contain;padding:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);flex:none}
+.logo.sm{width:32px;height:32px;border-radius:8px}
+.team .logo,.team .crest{display:block;margin:0 auto 4px;width:32px;height:32px;font-size:20px}
 .crest{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg,var(--red),#9d1320);display:grid;place-items:center;font:700 26px/1 "Barlow Condensed",Impact,sans-serif;color:#fff;box-shadow:0 4px 16px rgba(228,32,45,.45);transform:skewX(-6deg)}
 .wm{font:700 28px/.95 "Barlow Condensed",Impact,sans-serif;letter-spacing:.06em;text-transform:uppercase}
 .wm small{display:block;font:600 11px/1.2 Barlow,sans-serif;letter-spacing:.22em;color:var(--mut)}
@@ -96,6 +100,7 @@ td.z{color:var(--ln)}
 .ok{color:var(--pos);margin:6px 0;font-weight:600}
 .urow{padding:12px 0;border-bottom:1px solid var(--ln)}.urow:last-child{border-bottom:0}.urow .row{margin-top:8px}
 nav{max-width:100%;overflow-x:auto}
+.teambar{display:flex;align-items:center;gap:10px;margin:12px 0 0}.teambar span{font:700 13px/1 Barlow,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}.teambar select{font-weight:700;flex:1;max-width:320px}.teambar b{font:700 22px/1 "Barlow Condensed",Impact,sans-serif;letter-spacing:.06em;text-transform:uppercase}
 .lg{max-width:400px;margin:40px auto}
 .lg .brand{justify-content:center}.err{color:var(--neg);min-height:1.4em;margin:6px 0}.qr{width:200px;height:200px;background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
 @media print{header,.noprint{display:none!important}:root{--bg:#fff;--bg2:#fff;--sf:#fff;--sf2:#fff;--ink:#111;--mut:#555;--ln:#ccc;--gt:#fff3d6;--blt:#eee}body{background:#fff!important;color:#111}.card{box-shadow:none;background:#fff}h2{color:#111}}
@@ -115,14 +120,15 @@ const isG=id=>T(id).g;
 let db={players:[],match:null,history:[]};
 const SB=supabase.createClient(SB_URL,SB_KEY);
 let st=null;
-const save=()=>{clearTimeout(st);st=setTimeout(async()=>{const {error}=await SB.from("team_data").upsert({id:1,data:db});if(error)toast("Kunne ikke lagre: "+error.message)},500)};
+async function saveNow(){clearTimeout(st);st=null;if(!tid)return;const {error}=await SB.from("team_store").upsert({team_id:tid,data:db,updated_at:new Date().toISOString()});if(error)toast("Kunne ikke lagre: "+error.message)}
+const save=()=>{clearTimeout(st);st=setTimeout(saveNow,500)};
 function norm(){
 if(!db.evs)db.evs=EV.map(e=>({id:e[0],c:e[0],n:e[1],k:e[2],g:e[0]==="M"||e[0]==="SM"}));
 if(db.match){db.match.marks=db.match.marks||{};if(!db.match.phase)db.match.phase=(db.match.running||db.match.elapsed)?"h1":"pre"}
 }
 const PH={pre:"Før kampen",h1:"1. omgang",ht:"Pause",h2:"2. omgang",ft:"Kampen er over"};
 const PB=m=>{const x={pre:["ph1","Start 1. omgang"],h1:["pe1","Avslutt 1. omgang"],ht:["ph2","Start 2. omgang"],h2:["pe2","Avslutt 2. omgang og kamp"],ft:["end","Avslutt kamp"]}[m.phase];return `<button class="btn ${m.phase==="ft"?"dg":"pr"}" data-a="${x[0]}">${x[1]}</button>`};
-let tab="match",sel=null,opp="",pick=null,rep=null,arm=false,dlg=null,mlen=null,stp=null,swp=null,ulist=null,umsg=null,uarm=null,uedit=null,role=null,me=null,rview="one",agg=null;
+let tab="match",sel=null,opp="",pick=null,rep=null,arm=false,dlg=null,mlen=null,stp=null,swp=null,ulist=null,umsg=null,uarm=null,uedit=null,role=null,me=null,teams=[],tid=null,members=[],rview="one",agg=null;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const LEN=m=>(m.len||30)*60000;
 const raw=m=>m.elapsed+(m.running?Date.now()-m.startedAt:0);
@@ -177,8 +183,8 @@ function VU(){
  const msg=umsg?`<div class="${umsg.t==="ok"?"ok":"err"}" role="status">${esc(umsg.x)}</div>`:"";
  let h=`<h2>Min konto</h2>${msg}<div class="card"><div class="muted">Innlogget som</div><b>${esc(me?me.email:"")}</b> <span class="badge">${ad?"Administrator":"Standard"}</span><div class="row" style="margin-top:12px"><input type="password" id="mypw" placeholder="Nytt passord (minst 8 tegn)" autocomplete="new-password" style="flex:1 1 200px"><button class="btn" data-a="mypw">Bytt passord</button></div></div>`;
  if(!ad)return h;
- h+=`<h2>Legg til bruker</h2><div class="card"><div class="row"><input type="text" id="ne" placeholder="E-post" inputmode="email" autocomplete="off" style="flex:1 1 220px"><input type="text" id="np" placeholder="Passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen">Lag passord</button></div><div class="row" style="margin-top:8px"><select id="nr"><option value="standard">Standard</option><option value="admin">Administrator</option></select><button class="btn pr" data-a="uadd">Opprett bruker</button></div><p class="muted" style="margin:10px 0 0;font-size:14px">Brukeren logger inn med e-post og passordet, og setter opp tofaktor første gang. Gi dem passordet på en trygg måte.</p></div>
- <h2>Brukere</h2><div class="card">${ulist===null?'<span class="muted">Laster …</span>':ulist.length?ulist.map(u=>{const me2=me&&u.id===me.id;return `<div class="urow"><b>${esc(u.email||"(uten e-post)")}</b>${me2?' <span class="badge">deg</span>':""}<div class="row"><select data-uid="${u.id}" ${me2?"disabled":""}><option value="standard" ${u.role!=="admin"?"selected":""}>Standard</option><option value="admin" ${u.role==="admin"?"selected":""}>Administrator</option></select><button class="btn" data-a="upwe" data-v="${u.id}">Nytt passord</button><button class="btn" data-a="u2fa" data-v="${u.id}">${uarm==="u2fa:"+u.id?"Trykk igjen":"Nullstill tofaktor"}</button>${me2?"":`<button class="btn dg" data-a="udel" data-v="${u.id}">${uarm==="udel:"+u.id?"Trykk igjen":"Slett"}</button>`}</div>${uedit===u.id?`<div class="row"><input type="text" id="upw" placeholder="Nytt passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen2">Lag passord</button><button class="btn pr" data-a="upws" data-v="${u.id}">Lagre</button><button class="btn" data-a="upwc">Avbryt</button></div>`:""}</div>`}).join(""):'<span class="muted">Ingen brukere funnet. Har du kjørt SQL-oppsettet for roller?</span>'}</div>`;
+ h+=`<h2>Legg til bruker</h2><div class="card"><div class="row"><input type="text" id="ne" placeholder="E-post" inputmode="email" autocomplete="off" style="flex:1 1 220px"><input type="text" id="np" placeholder="Passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen">Lag passord</button></div><div class="row" style="margin-top:8px"><select id="nr"><option value="standard">Standard</option><option value="admin">Administrator</option></select><button class="btn pr" data-a="uadd">Opprett bruker</button></div><div class="row" style="margin-top:8px">${teams.length?teams.map(t=>`<label class="chk"><input type="checkbox" data-ntid="${t.id}">${esc(t.name)}</label>`).join(""):""}</div><div class="muted" style="font-size:14px;margin-top:6px">${teams.length?"Velg hvilke lag brukeren får tilgang til. Gjelder ikke administratorer, som ser alle lag.":"Opprett lag under fanen Lag først, så kan du gi tilgang her."}</div><p class="muted" style="margin:10px 0 0;font-size:14px">Brukeren logger inn med e-post og passordet, og setter opp tofaktor første gang. Gi dem passordet på en trygg måte.</p></div>
+ <h2>Brukere</h2><div class="card">${ulist===null?'<span class="muted">Laster …</span>':ulist.length?ulist.map(u=>{const me2=me&&u.id===me.id;return `<div class="urow"><b>${esc(u.email||"(uten e-post)")}</b>${me2?' <span class="badge">deg</span>':""}<div class="row"><select data-uid="${u.id}" ${me2?"disabled":""}><option value="standard" ${u.role!=="admin"?"selected":""}>Standard</option><option value="admin" ${u.role==="admin"?"selected":""}>Administrator</option></select><button class="btn" data-a="upwe" data-v="${u.id}">Nytt passord</button><button class="btn" data-a="u2fa" data-v="${u.id}">${uarm==="u2fa:"+u.id?"Trykk igjen":"Nullstill tofaktor"}</button>${me2?"":`<button class="btn dg" data-a="udel" data-v="${u.id}">${uarm==="udel:"+u.id?"Trykk igjen":"Slett"}</button>`}</div>${acc(u)}${uedit===u.id?`<div class="row"><input type="text" id="upw" placeholder="Nytt passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen2">Lag passord</button><button class="btn pr" data-a="upws" data-v="${u.id}">Lagre</button><button class="btn" data-a="upwc">Avbryt</button></div>`:""}</div>`}).join(""):'<span class="muted">Ingen brukere funnet. Har du kjørt SQL-oppsettet for roller?</span>'}</div>`;
  return h;
 }
 
@@ -201,7 +207,7 @@ function VM(){
  const cnt=id=>m.events.filter(e=>e.p===id).length;
  const pt=PT(m,true),co=court(m),on=m.squad.filter(p=>co.includes(p.id)),bn=m.squad.filter(p=>!co.includes(p.id));
  const TILE=(p,z)=>`<button class="pl" data-a="sel" data-v="${p.id}" data-z="${z}"><span class="no">${esc(p.no||"–")}</span><span class="nm">${esc(p.name)}<small>${cnt(p.id)} hendelser · <span data-pt="${p.id}">${fmt(pt[p.id]||0)}</span></small></span></button>`;
- let h=`<div class="board"><div class="bhead"><span class="ph">${PH[m.phase]}</span><span>Håndball gutter</span></div><div class="bmain" aria-label="Stilling"><div class="team home"><small>Urædd</small><b>${goals(m)}</b></div><div class="mid"><div class="clock"><span id="clk">${fmt(cur(m))}</span><small id="ot">${otx(m)}</small></div><div class="len">2 × ${m.len||30} min</div></div><div class="team"><small>${esc(m.opp||"Motstander")}</small><b>${oppG(m)}</b></div></div></div>
+ let h=`<div class="board"><div class="bhead"><span class="ph">${PH[m.phase]}</span><span>${esc(tname())}</span></div><div class="bmain" aria-label="Stilling"><div class="team home">${LG("sm")}<small>Urædd</small><b>${goals(m)}</b></div><div class="mid"><div class="clock"><span id="clk">${fmt(cur(m))}</span><small id="ot">${otx(m)}</small></div><div class="len">2 × ${m.len||30} min</div></div><div class="team"><small>${esc(m.opp||"Motstander")}</small><b>${oppG(m)}</b></div></div></div>
  <div class="card" style="margin-top:0"> <div class="row" style="margin-top:10px"><button class="btn og" data-a="oppg">+ Mål til ${esc(m.opp||"motstander")}</button><button class="btn" data-a="swap">⇄ Bytte</button>${PB(m)}${m.phase==="h1"||m.phase==="h2"?`<button class="btn" data-a="clock">${m.running?"Pause klokka":"Start klokka"}</button>`:""}<button class="btn" data-a="undo" ${m.events.length?"":"disabled"}>Angre siste</button></div></div>
  <p class="muted" style="margin:6px 0 0;font-size:14px">Tips: hold inne og dra en spiller over en annen (benk ↔ bane) for å bytte.</p><h2>På banen (${on.length} av ${m.len===20?6:7})</h2><div class="grid">${on.map(p=>TILE(p,"on")).join("")}</div><h2>Benk (${bn.length})</h2><div class="grid">${bn.map(p=>TILE(p,"bn")).join("")}</div>`;
  h+=`<h2>Registrerte hendelser</h2>`+(m.events.length?`<ul class="tl live">${m.events.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<li class="${isG(e.e)?"g":KIND[e.e]}"><time>${fmt(e.t)}</time><b class="code ${KIND[e.e]}">${esc(T(e.e).c)}</b><span>${esc(pn(m,e.p))}<em>${esc(T(e.e).n)}</em></span><button class="btn dg" data-a="dele" data-v="${i}" aria-label="Slett hendelse">Slett</button></li>`).join("")}</ul>`:'<div class="card muted">Ingen hendelser ennå. Trykk på en spiller for å registrere.</div>');
@@ -227,14 +233,15 @@ function VR1(){
  const ev=[...m.events.map(e=>({...e,h:e.h||1})),...(m.subs||[]).map(x=>({sub:1,out:x.o,inn:x.i,h:x.h,t:x.t})),...[["h1s","Start 1. omgang",1,-1],["h1e","Slutt 1. omgang",1,9e12],["h2s","Start 2. omgang",2,-1],["h2e","Slutt 2. omgang",2,9e12]].filter(x=>mk[x[0]]!==undefined).map(x=>({mark:x[1],h:x[2],t:x[3],tm:mk[x[0]]}))].sort((a,b)=>(a.h-b.h)||(a.t-b.t));
  let sa=0,sb=0;ev.forEach(e=>{if(e.mark||e.sub)return;if(e.e==="_opp"){sb++;e.sc=sa+"–"+sb}else if(isG(e.e)){sa++;e.sc=sa+"–"+sb}});
  return `<h2>Rapport</h2><div class="card"><div class="row noprint"><select id="rsel">${L.slice().reverse().map(x=>`<option value="${x.id}" ${x.id===m.id?"selected":""}>${esc(x.date)} · Urædd – ${esc(x.opp||"motstander")}</option>`).join("")}</select><button class="btn" data-a="print">Skriv ut</button><button class="btn dg" data-a="delr" data-v="${m.id}">${arm?"Trykk igjen for å slette":"Slett rapport"}</button></div>
- <div style="margin-top:10px"><b style="font-size:24px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">Urædd – ${esc(m.opp||"motstander")}</b> <span class="muted">${esc(m.date)} · ${fmt(tot)} spilt (2×${m.len||30} min) · <b>${goals(m)}–${oppG(m)}</b> (1. omgang ${hs(m,1)}, 2. omgang ${hs(m,2)}) · ${m.events.filter(e=>e.e!=="_opp").length} hendelser</span></div></div>
+ <div style="margin-top:10px"><span style="display:inline-block;vertical-align:middle;margin-right:8px">${LG("sm")}</span><b style="font-size:24px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">Urædd – ${esc(m.opp||"motstander")}</b> <span class="muted">${esc(tname())} · ${esc(m.date)} · ${fmt(tot)} spilt (2×${m.len||30} min) · <b>${goals(m)}–${oppG(m)}</b> (1. omgang ${hs(m,1)}, 2. omgang ${hs(m,2)}) · ${m.events.filter(e=>e.e!=="_opp").length} hendelser</span></div></div>
  <h2>Tidslinje</h2>${ev.length?`<ul class="tl">${ev.map(e=>e.sub?`<li class="sub"><time>${fmt(e.t)}</time><b class="code">⇄</b><span>${esc(pn(m,e.out))} ut<em>${esc(pn(m,e.inn))} inn</em></span></li>`:e.mark?`<li class="mk"><time>${fmt(e.tm)}</time><b></b><span>${e.mark}</span></li>`:`<li class="${isG(e.e)?"g":KIND[e.e]}"><time>${fmt(e.t)}</time><b class="code ${KIND[e.e]}">${esc(T(e.e).c)}</b><span>${esc(pn(m,e.p))}<em>${esc(T(e.e).n)}${e.sc?" · stilling "+e.sc:""}</em></span></li>`).join("")}</ul>`:'<div class="card muted">Ingen hendelser registrert.</div>'}
  <h2>Per spiller</h2><div class="card sc">${TBL([m])}</div>`;
 }
 
 function R(){
- let h=`<header><div class="brand"><div class="crest">U</div><div class="wm">Urædd<small>Håndball gutter · kampføring</small></div></div><nav>${[["match","Kamp"],["players","Spillere"],["events","Hendelser"],["report","Rapport"],["users",role==="admin"?"Brukere":"Konto"]].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</nav><button class="btn noprint" data-a="out">Logg ut</button></header>`;
- h+=tab==="players"?VP():tab==="events"?VE():tab==="report"?VR():tab==="users"?VU():VM();
+ let h=`<header><div class="brand">${LG()}<div class="wm">Urædd<small>Håndball · kampføring</small></div></div><nav>${[["match","Kamp"],["players","Spillere"],["events","Hendelser"],["report","Rapport"],...(role==="admin"?[["teams","Lag"]]:[]),["users",role==="admin"?"Brukere":"Konto"]].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</nav><button class="btn noprint" data-a="out">Logg ut</button></header>`;
+ h+=tid?TB():"";
+ h+=!tid&&["match","players","events","report"].includes(tab)?VPick():tab==="players"?VP():tab==="events"?VE():tab==="report"?VR():tab==="teams"?VT():tab==="users"?VU():VM();
  document.getElementById("app").innerHTML=h;
 }
 
@@ -242,7 +249,7 @@ document.addEventListener("click",ev=>{
  if(Date.now()<noClick)return;const t=ev.target.closest("[data-a]");if(!t)return;
  if(t.classList.contains("sheet")&&ev.target!==t)return;
  const a=t.dataset.a,v=t.dataset.v,m=db.match;
- if(a==="tab"){tab=v;sel=null;arm=false;dlg=null;swp=null;uarm=null;uedit=null;if(v==="users"){umsg=null;loadUsers()}}
+ if(a==="tab"){tab=v;sel=null;arm=false;dlg=null;swp=null;uarm=null;uedit=null;if(v==="users"){umsg=null;loadUsers()}if(v==="teams"){umsg=null;loadMembers().then(R)}}
  else if(a==="addp"){const n=document.getElementById("pn").value.trim(),no=document.getElementById("pno").value.trim();if(!n){toast("Skriv inn et navn");return}
   db.players.push({id:"p"+Date.now(),name:n,no});save()}
  else if(a==="delp"){db.players=db.players.filter(p=>p.id!==v);pick=null;stp=null;save()}
@@ -260,7 +267,8 @@ document.addEventListener("click",ev=>{
  else if(a==="agnone"){agg=new Set()}
  else if(a==="adde"){const c=document.getElementById("ec").value.trim(),n=document.getElementById("en").value.trim();if(!c||!n){toast("Fyll inn kode og navn");return}db.evs.push({id:"e"+Date.now(),c,n,k:document.getElementById("ek").value,g:document.getElementById("eg").checked});save()}
  else if(a==="deld"){const d=db.evs.find(x=>x.id===v);if(d)d.x=true;save()}
- else if(a==="out"){SB.auth.signOut().then(()=>location.reload());return}
+ else if(a==="retry"){start();return}
+ else if(a==="out"){saveNow().finally(()=>SB.auth.signOut().then(()=>location.reload()));return}
  else if(a==="oppg"){m.events.push({t:cur(m),p:null,e:"_opp",h:(m.phase==="ht"||m.phase==="h2"||m.phase==="ft")?2:1});toast("Mål mot · stilling "+goals(m)+"–"+oppG(m));save()}
  else if(a==="delr"||a==="delsel"){if(!arm){arm=true;R();setTimeout(()=>{arm=false;R()},4000);return}
   const ids=a==="delr"?[v]:[...agg];db.history=db.history.filter(x=>!ids.includes(x.id));rep=null;if(agg)ids.forEach(i=>agg.delete(i));arm=false;save();toast(ids.length+(ids.length>1?" rapporter":" rapport")+" slettet")}
@@ -275,9 +283,9 @@ document.addEventListener("click",ev=>{
   else{SB.auth.updateUser({password:pw}).then(({error})=>{umsg=error?{t:"err",x:"Kunne ikke bytte passord: "+error.message}:{t:"ok",x:"Passordet er endret."};R()});return}}
  else if(a==="ugen"){document.getElementById("np").value=gen();return}
  else if(a==="ugen2"){document.getElementById("upw").value=gen();return}
- else if(a==="uadd"){const em=document.getElementById("ne").value.trim(),pw=document.getElementById("np").value,r=document.getElementById("nr").value;
+ else if(a==="uadd"){const em=document.getElementById("ne").value.trim(),pw=document.getElementById("np").value,r=document.getElementById("nr").value,tids=[...document.querySelectorAll("[data-ntid]:checked")].map(x=>x.dataset.ntid);
   if(!em||pw.length<8){umsg={t:"err",x:"Fyll inn e-post og et passord på minst 8 tegn."}}
-  else{adm({action:"create",email:em,password:pw,role:r}).then(()=>{umsg={t:"ok",x:"Bruker "+em+" er opprettet. Gi dem passordet; de setter opp tofaktor ved første innlogging."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};R()});return}}
+  else{adm({action:"create",email:em,password:pw,role:r}).then(async()=>{umsg={t:"ok",x:"Bruker "+em+" er opprettet. Gi dem passordet; de setter opp tofaktor ved første innlogging."};await loadUsers();const nu=ulist.find(x=>(x.email||"").toLowerCase()===em.toLowerCase());if(nu&&r!=="admin"&&tids.length){const {error}=await SB.from("team_members").insert(tids.map(i=>({team_id:i,user_id:nu.id})));if(error)umsg={t:"err",x:"Bruker opprettet, men lagtilgang feilet: "+error.message};await loadMembers();R()}}).catch(x=>{umsg={t:"err",x:x.message};R()});return}}
  else if(a==="upwe"){uedit=v;uarm=null}
  else if(a==="upwc"){uedit=null}
  else if(a==="upws"){const pw=document.getElementById("upw").value;
@@ -286,6 +294,20 @@ document.addEventListener("click",ev=>{
  else if(a==="udel"||a==="u2fa"){const k=a+":"+v;
   if(uarm!==k){uarm=k;R();setTimeout(()=>{if(uarm===k){uarm=null;R()}},4000);return}
   uarm=null;adm({action:a==="udel"?"delete":"reset2fa",id:v}).then(()=>{umsg={t:"ok",x:a==="udel"?"Bruker slettet.":"Tofaktor nullstilt. Brukeren setter opp ny ved neste innlogging."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};R()});return}
+ else if(a==="pickteam"||a==="teamopen"){openTeam(v,true);return}
+ else if(a==="tadd"){const n=document.getElementById("tn").value.trim();
+  if(!n){umsg={t:"err",x:"Skriv inn et navn på laget."}}
+  else{(async()=>{const {data,error}=await SB.from("teams").insert({name:n}).select("id,name").single();
+    if(error){umsg={t:"err",x:"Kunne ikke opprette lag: "+error.message};R();return}
+    await SB.from("team_store").insert({team_id:data.id,data:{}});
+    await loadTeams();await loadMembers();umsg={t:"ok",x:"Laget «"+n+"» er opprettet. Gi brukere tilgang under Brukere."};R()})();return}}
+ else if(a==="tdel"){const k="tdel:"+v;
+  if(uarm!==k){uarm=k;R();setTimeout(()=>{if(uarm===k){uarm=null;R()}},4000);return}
+  uarm=null;if(tid===v)clearTimeout(st);
+  (async()=>{const {error}=await SB.from("teams").delete().eq("id",v);
+    if(error){umsg={t:"err",x:"Kunne ikke slette laget: "+error.message};R();return}
+    if(tid===v){tid=null;db={players:[],match:null,history:[]}}
+    await loadTeams();await loadMembers();umsg={t:"ok",x:"Laget og alle data for det er slettet."};R()})();return}
  else if(a==="undo"){const e=m.events.pop();if(e)toast("Angret "+e.e);save()}
  else if(a==="ph1"||a==="ph2"){const f=a==="ph1";m.marks[f?"h1s":"h2s"]=cur(m);m.phase=f?"h1":"h2";m.startedAt=Date.now();m.running=true;save()}
  else if(a==="pe1"||a==="pe2"||a==="end"){dlg=a}
@@ -298,7 +320,14 @@ document.addEventListener("click",ev=>{
  R();
 });
 document.addEventListener("input",e=>{if(e.target.id==="opp")opp=e.target.value});
-document.addEventListener("change",e=>{const t=e.target;if(t.dataset.uid){adm({action:"setRole",id:t.dataset.uid,role:t.value}).then(()=>{umsg={t:"ok",x:"Rolle oppdatert."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};return loadUsers()});return}
+document.addEventListener("change",e=>{const t=e.target;
+if(t.id==="tsel"){openTeam(t.value,false);return}
+if(t.dataset.tn){const nv=t.value.trim();if(!nv){R();return}SB.from("teams").update({name:nv}).eq("id",t.dataset.tn).then(({error})=>{if(error){toast("Feil: "+error.message);return}const x=teams.find(y=>y.id===t.dataset.tn);if(x)x.name=nv;toast("Lagret");R()});return}
+if(t.dataset.mt){const tm=t.dataset.mt,um=t.dataset.mu;
+ const op=t.checked?SB.from("team_members").insert({team_id:tm,user_id:um}):SB.from("team_members").delete().eq("team_id",tm).eq("user_id",um);
+ op.then(({error})=>{if(error){toast("Feil: "+error.message);t.checked=!t.checked;return}
+  if(t.checked)members.push({team_id:tm,user_id:um});else members=members.filter(x=>!(x.team_id===tm&&x.user_id===um));toast("Tilgang oppdatert")});return}
+if(t.dataset.uid){adm({action:"setRole",id:t.dataset.uid,role:t.value}).then(()=>{umsg={t:"ok",x:"Rolle oppdatert."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};return loadUsers()});return}
 if(t.id==="mt"){mlen=+t.value;R();return}
 if(t.id==="rsel"){rep=t.value;R();return}
  if(t.dataset.eid){const d=db.evs.find(x=>x.id===t.dataset.eid);if(!d)return;const f=t.dataset.f;
@@ -327,18 +356,30 @@ document.addEventListener("mousemove",e=>{if(!dg||dg.tm)return;if(!dg.on){if(Mat
 document.addEventListener("mouseup",e=>{if(dg&&!dg.tm)dEnd(e.clientX,e.clientY)});
 document.addEventListener("contextmenu",e=>{if(dTile(e))e.preventDefault()});
 
+const LOGO="https://sagjjvpkxhgfpjnaqlgv.supabase.co/storage/v1/object/public/tenant-assets/51208bc7-cc9a-49bf-ac10-c452c0530472/logo.jpeg?t=1774872970253";
+function logoFail(el){const d=document.createElement("div");d.className="crest";d.textContent="U";el.replaceWith(d)}
+const LG=c=>`<img class="logo ${c||""}" src="${LOGO}" alt="Urædd Håndball" onerror="logoFail(this)">`;
 const gen=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=new Uint32Array(14);crypto.getRandomValues(a);return Array.from(a,x=>c[x%c.length]).join("")};
 async function adm(body){
- const {data,error}=await SB.functions.invoke("admin-users",{body});
- if(error){let m=error.message;try{const j=await error.context.json();if(j&&j.error)m=j.error}catch(e){}throw new Error(m)}
+ const {data:{session}}=await SB.auth.getSession();
+ if(!session)throw new Error("Du er ikke innlogget. Last siden på nytt og logg inn.");
+ const {data,error}=await SB.functions.invoke("admin-users",{body,headers:{Authorization:"Bearer "+session.access_token}});
+ if(error){
+  let st=error.context&&error.context.status,m="";
+  try{const j=await error.context.json();m=j.error||j.message||j.msg||JSON.stringify(j)}catch(e){try{m=await error.context.text()}catch(_){}}
+  if(!st)throw new Error("Fikk ikke kontakt med funksjonen admin-users. Er den lagt ut (deployed) i Supabase med nøyaktig dette navnet? ("+error.message+")");
+  let hint="";
+  if(st===404)hint=" Funksjonen admin-users finnes ikke. Legg den ut i Supabase under Edge Functions.";
+  else if(st===401&&/jwt/i.test(m))hint=" Slå av «Verify JWT» for funksjonen admin-users i Supabase (Edge Functions → admin-users → Details), og prøv igjen.";
+  throw new Error("Feil "+(st||"")+": "+(m||error.message)+hint)}
  if(data&&data.error)throw new Error(data.error);return data}
 async function loadUsers(){
  if(role!=="admin"){R();return}
  const {data,error}=await SB.from("profiles").select("id,email,role,created_at").order("email");
  if(error){ulist=[];umsg={t:"err",x:"Kunne ikke hente brukere: "+error.message}}else ulist=data;
- R()}
+ await loadMembers();R()}
 const A=()=>document.getElementById("app");
-const box=h=>{A().innerHTML=`<div class="card lg"><div class="brand" style="margin-bottom:12px"><div class="crest">U</div><div class="wm">Urædd<small>Håndball gutter · kampføring</small></div></div>${h}</div>`};
+const box=h=>{A().innerHTML=`<div class="card lg"><div class="brand" style="margin-bottom:12px">${LG()}<div class="wm">Urædd<small>Håndball · kampføring</small></div></div>${h}</div>`};
 function LOGIN(msg,em){
  box(`<p class="muted">Logg inn for å fortsette.</p><div id="lf"><label class="f" for="lu">Brukernavn (e-post)</label><input type="text" id="lu" value="${esc(em||"")}" autocomplete="username" inputmode="email" style="width:100%"><label class="f" for="lp" style="margin-top:10px">Passord</label><input type="password" id="lp" autocomplete="current-password" style="width:100%"><div class="err" role="alert">${esc(msg||"")}</div><button class="btn pr" id="lb" type="button">Logg inn</button></div>`);
  const go=async()=>{const em=document.getElementById("lu").value.trim(),b=document.getElementById("lb");b.disabled=true;b.textContent="Logger inn …";
@@ -365,14 +406,40 @@ async function MFA(){
  document.getElementById("mb").onclick=go;
  document.getElementById("mf").onkeydown=e=>{if(e.key==="Enter")go()};
 }
-async function start(){
- const {data,error}=await SB.from("team_data").select("data").eq("id",1).maybeSingle();
- if(error)return LOGIN("Kunne ikke hente data: "+error.message);
- if(data&&data.data)db=data.data;
+const tname=()=>{const t=teams.find(x=>x.id===tid);return t?t.name:""};
+async function loadTeams(){const {data,error}=await SB.from("teams").select("id,name").order("name");if(error){teams=[];return error.message}teams=data||[];return null}
+async function loadMembers(){if(role!=="admin"){members=[];return}const {data}=await SB.from("team_members").select("team_id,user_id");members=data||[]}
+async function openTeam(id,goMatch){
+ await saveNow();
+ const {data,error}=await SB.from("team_store").select("data").eq("team_id",id).maybeSingle();
+ if(error){toast("Kunne ikke hente laget: "+error.message);return}
+ tid=id;
+ db=(data&&data.data&&Object.keys(data.data).length)?data.data:{players:[],match:null,history:[]};
+ if(!db.players)db.players=[];if(!db.history)db.history=[];
  norm();
+ sel=null;pick=null;stp=null;rep=null;agg=null;dlg=null;swp=null;arm=false;rview="one";opp="";mlen=null;
+ if(goMatch)tab=(db.match||db.players.length)?"match":"players";
+ try{localStorage.setItem("hb-last-team",id)}catch(e){}
+ R()}
+const TB=()=>`<div class="teambar noprint"><span>Lag</span>${teams.length>1?`<select id="tsel" aria-label="Velg lag">${teams.map(t=>`<option value="${t.id}" ${t.id===tid?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`:`<b>${esc(tname())}</b>`}</div>`;
+function VPick(){
+ if(!teams.length)return `<h2>Velg lag</h2><div class="card">${role==="admin"?'Det er ingen lag ennå. Opprett det første under fanen Lag.<div style="margin-top:10px"><button class="btn pr" data-a="tab" data-v="teams">Gå til Lag</button></div>':'Du har ikke tilgang til noe lag ennå. Be en administrator gi deg tilgang.'}</div>`;
+ return `<h2>Velg lag</h2><div class="grid" style="grid-template-columns:1fr">${teams.map(t=>`<button class="btn" data-a="pickteam" data-v="${t.id}" style="padding:18px 16px;font:700 24px 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:left">${esc(t.name)}</button>`).join("")}</div>`}
+function acc(u){return u.role==="admin"?'<div class="muted" style="margin-top:8px;font-size:14px">Administrator ser alle lag.</div>':(teams.length?`<div class="row" style="margin-top:8px">${teams.map(t=>`<label class="chk"><input type="checkbox" data-mt="${t.id}" data-mu="${u.id}" ${members.some(x=>x.team_id===t.id&&x.user_id===u.id)?"checked":""}>${esc(t.name)}</label>`).join("")}</div>`:'<div class="muted" style="margin-top:8px;font-size:14px">Ingen lag er opprettet ennå.</div>')}
+function VT(){
+ const msg=umsg?`<div class="${umsg.t==="ok"?"ok":"err"}" role="status">${esc(umsg.x)}</div>`:"";
+ return `<h2>Lag</h2>${msg}<div class="card"><div class="row"><input type="text" id="tn" placeholder="Navn på nytt lag, for eksempel G14" style="flex:1 1 220px"><button class="btn pr" data-a="tadd">Opprett lag</button></div><p class="muted" style="margin:10px 0 0;font-size:14px">Hvert lag får egne spillere, hendelser og rapporter. Gi brukere tilgang til lagene under fanen Brukere.</p></div>
+ <div class="card">${teams.length?teams.map(t=>{const n=members.filter(x=>x.team_id===t.id).length;return `<div class="urow"><div class="row"><input type="text" value="${esc(t.name)}" data-tn="${t.id}" aria-label="Lagnavn" style="flex:1 1 180px;font-weight:700"><span class="muted">${n} ${n===1?"bruker":"brukere"}</span></div><div class="row"><button class="btn" data-a="teamopen" data-v="${t.id}">Åpne</button><button class="btn dg" data-a="tdel" data-v="${t.id}">${uarm==="tdel:"+t.id?"Trykk igjen – sletter alt":"Slett lag"}</button></div></div>`}).join(""):'<span class="muted">Ingen lag ennå.</span>'}</div>`}
+async function start(){
  try{const {data:{user}}=await SB.auth.getUser();me=user;
   const {data:pr}=await SB.from("profiles").select("role").eq("id",user.id).maybeSingle();role=pr?pr.role:null}catch(e){role=null}
- tab=(db.match||db.players.length)?"match":"players";R();
+ const err=await loadTeams();
+ if(err){const miss=/does not exist|schema cache|could not find|relation|permission denied/i.test(err);
+  return box(`<p class="err" role="alert">Du er innlogget, men appen kunne ikke hente lagene.</p><p class="muted" style="font-size:14px">Melding fra Supabase: ${esc(err)}</p>${miss?'<p>Dette skyldes som oftest at oppsettet i Supabase ikke er ferdig. Kjør <b>supabase-oppsett-roller.sql</b> og deretter <b>supabase-oppsett-flere-lag.sql</b> i SQL Editor, og trykk «Prøv igjen».</p>':'<p>Prøv igjen. Hvis det fortsatt feiler, logg ut og inn på nytt.</p>'}<div class="row"><button class="btn pr" data-a="retry">Prøv igjen</button><button class="btn" data-a="out">Logg ut</button></div>`)}
+ let last=null;try{last=localStorage.getItem("hb-last-team")}catch(e){}
+ const first=teams.find(t=>t.id===last)||(teams.length===1?teams[0]:null);
+ tab="match";
+ if(first)await openTeam(first.id,true);else R();
 }
 async function boot(){
  if(SB_URL.includes("DITT-PROSJEKT"))return box('<p class="err">Fyll inn Supabase-URL og nøkkel øverst i filen før du bruker appen.</p>');
