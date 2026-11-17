@@ -92,6 +92,10 @@ td.z{color:var(--ln)}
 .tl li.sub{border-left-color:var(--mut)}
 .sheet>div{max-height:88vh;overflow:auto}
 .pl{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.pl.dragging{opacity:.35}.pl.over{outline:3px solid var(--gl);background:var(--gt)}.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;box-shadow:0 8px 24px rgba(0,0,0,.3);transform:scale(1.04)}
+.badge{display:inline-block;font:700 12px/1 Barlow,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:6px;background:var(--sf2);border:1px solid var(--ln);color:var(--mut)}
+.ok{color:var(--pos);margin:6px 0;font-weight:600}
+.urow{padding:12px 0;border-bottom:1px solid var(--ln)}.urow:last-child{border-bottom:0}.urow .row{margin-top:8px}
+nav{max-width:100%;overflow-x:auto}
 .lg{max-width:400px;margin:40px auto}
 .lg .brand{justify-content:center}.err{color:var(--neg);min-height:1.4em;margin:6px 0}.qr{width:200px;height:200px;background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
 @media print{header,.noprint{display:none!important}:root{--bg:#fff;--bg2:#fff;--sf:#fff;--sf2:#fff;--ink:#111;--mut:#555;--ln:#ccc;--gt:#fff3d6;--blt:#eee}body{background:#fff!important;color:#111}.card{box-shadow:none;background:#fff}h2{color:#111}}
@@ -118,7 +122,7 @@ if(db.match){db.match.marks=db.match.marks||{};if(!db.match.phase)db.match.phase
 }
 const PH={pre:"Før kampen",h1:"1. omgang",ht:"Pause",h2:"2. omgang",ft:"Kampen er over"};
 const PB=m=>{const x={pre:["ph1","Start 1. omgang"],h1:["pe1","Avslutt 1. omgang"],ht:["ph2","Start 2. omgang"],h2:["pe2","Avslutt 2. omgang og kamp"],ft:["end","Avslutt kamp"]}[m.phase];return `<button class="btn ${m.phase==="ft"?"dg":"pr"}" data-a="${x[0]}">${x[1]}</button>`};
-let tab="match",sel=null,opp="",pick=null,rep=null,arm=false,dlg=null,mlen=null,stp=null,swp=null,rview="one",agg=null;
+let tab="match",sel=null,opp="",pick=null,rep=null,arm=false,dlg=null,mlen=null,stp=null,swp=null,ulist=null,umsg=null,uarm=null,uedit=null,role=null,me=null,rview="one",agg=null;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const LEN=m=>(m.len||30)*60000;
 const raw=m=>m.elapsed+(m.running?Date.now()-m.startedAt:0);
@@ -166,6 +170,16 @@ function VE(){
  const opt=k=>`<option value="p" ${k==="p"?"selected":""}>Positiv</option><option value="n" ${k==="n"?"selected":""}>Negativ</option>`;
  return `<h2>Hendelser</h2><div class="card"><div class="row"><input type="text" id="ec" placeholder="Kode" style="width:84px"><input type="text" id="en" placeholder="Navn" style="flex:1 1 160px"><select id="ek">${opt("p")}</select></div><div class="row" style="margin-top:8px"><label class="row"><input type="checkbox" id="eg"> Teller som mål</label><button class="btn pr" data-a="adde">Legg til hendelse</button></div></div>
  <div class="card">${db.evs.filter(d=>!d.x).map(d=>`<div class="li" style="gap:6px;flex-wrap:wrap"><input type="text" value="${esc(d.c)}" data-eid="${d.id}" data-f="c" style="width:70px"><input type="text" value="${esc(d.n)}" data-eid="${d.id}" data-f="n" style="flex:1 1 140px"><select data-eid="${d.id}" data-f="k">${opt(d.k)}</select><label class="row"><input type="checkbox" data-eid="${d.id}" data-f="g" ${d.g?"checked":""}> Mål</label><button class="btn dg" data-a="deld" data-v="${d.id}">Fjern</button></div>`).join("")}</div><p class="muted">Endringer lagres med en gang og gjelder også i tidligere rapporter. Fjernede hendelser forsvinner fra knappene, men gamle registreringer beholdes.</p>`;
+}
+
+function VU(){
+ const ad=role==="admin";
+ const msg=umsg?`<div class="${umsg.t==="ok"?"ok":"err"}" role="status">${esc(umsg.x)}</div>`:"";
+ let h=`<h2>Min konto</h2>${msg}<div class="card"><div class="muted">Innlogget som</div><b>${esc(me?me.email:"")}</b> <span class="badge">${ad?"Administrator":"Standard"}</span><div class="row" style="margin-top:12px"><input type="password" id="mypw" placeholder="Nytt passord (minst 8 tegn)" autocomplete="new-password" style="flex:1 1 200px"><button class="btn" data-a="mypw">Bytt passord</button></div></div>`;
+ if(!ad)return h;
+ h+=`<h2>Legg til bruker</h2><div class="card"><div class="row"><input type="text" id="ne" placeholder="E-post" inputmode="email" autocomplete="off" style="flex:1 1 220px"><input type="text" id="np" placeholder="Passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen">Lag passord</button></div><div class="row" style="margin-top:8px"><select id="nr"><option value="standard">Standard</option><option value="admin">Administrator</option></select><button class="btn pr" data-a="uadd">Opprett bruker</button></div><p class="muted" style="margin:10px 0 0;font-size:14px">Brukeren logger inn med e-post og passordet, og setter opp tofaktor første gang. Gi dem passordet på en trygg måte.</p></div>
+ <h2>Brukere</h2><div class="card">${ulist===null?'<span class="muted">Laster …</span>':ulist.length?ulist.map(u=>{const me2=me&&u.id===me.id;return `<div class="urow"><b>${esc(u.email||"(uten e-post)")}</b>${me2?' <span class="badge">deg</span>':""}<div class="row"><select data-uid="${u.id}" ${me2?"disabled":""}><option value="standard" ${u.role!=="admin"?"selected":""}>Standard</option><option value="admin" ${u.role==="admin"?"selected":""}>Administrator</option></select><button class="btn" data-a="upwe" data-v="${u.id}">Nytt passord</button><button class="btn" data-a="u2fa" data-v="${u.id}">${uarm==="u2fa:"+u.id?"Trykk igjen":"Nullstill tofaktor"}</button>${me2?"":`<button class="btn dg" data-a="udel" data-v="${u.id}">${uarm==="udel:"+u.id?"Trykk igjen":"Slett"}</button>`}</div>${uedit===u.id?`<div class="row"><input type="text" id="upw" placeholder="Nytt passord" autocomplete="off" style="flex:1 1 160px"><button class="btn" data-a="ugen2">Lag passord</button><button class="btn pr" data-a="upws" data-v="${u.id}">Lagre</button><button class="btn" data-a="upwc">Avbryt</button></div>`:""}</div>`}).join(""):'<span class="muted">Ingen brukere funnet. Har du kjørt SQL-oppsettet for roller?</span>'}</div>`;
+ return h;
 }
 
 function VP(){
@@ -219,8 +233,8 @@ function VR1(){
 }
 
 function R(){
- let h=`<header><div class="brand"><div class="crest">U</div><div class="wm">Urædd<small>Håndball gutter · kampføring</small></div></div><nav>${[["match","Kamp"],["players","Spillere"],["events","Hendelser"],["report","Rapport"]].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</nav><button class="btn noprint" data-a="out">Logg ut</button></header>`;
- h+=tab==="players"?VP():tab==="events"?VE():tab==="report"?VR():VM();
+ let h=`<header><div class="brand"><div class="crest">U</div><div class="wm">Urædd<small>Håndball gutter · kampføring</small></div></div><nav>${[["match","Kamp"],["players","Spillere"],["events","Hendelser"],["report","Rapport"],["users",role==="admin"?"Brukere":"Konto"]].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</nav><button class="btn noprint" data-a="out">Logg ut</button></header>`;
+ h+=tab==="players"?VP():tab==="events"?VE():tab==="report"?VR():tab==="users"?VU():VM();
  document.getElementById("app").innerHTML=h;
 }
 
@@ -228,7 +242,7 @@ document.addEventListener("click",ev=>{
  if(Date.now()<noClick)return;const t=ev.target.closest("[data-a]");if(!t)return;
  if(t.classList.contains("sheet")&&ev.target!==t)return;
  const a=t.dataset.a,v=t.dataset.v,m=db.match;
- if(a==="tab"){tab=v;sel=null;arm=false;dlg=null;swp=null}
+ if(a==="tab"){tab=v;sel=null;arm=false;dlg=null;swp=null;uarm=null;uedit=null;if(v==="users"){umsg=null;loadUsers()}}
  else if(a==="addp"){const n=document.getElementById("pn").value.trim(),no=document.getElementById("pno").value.trim();if(!n){toast("Skriv inn et navn");return}
   db.players.push({id:"p"+Date.now(),name:n,no});save()}
  else if(a==="delp"){db.players=db.players.filter(p=>p.id!==v);pick=null;stp=null;save()}
@@ -256,6 +270,22 @@ document.addEventListener("click",ev=>{
  else if(a==="si"){swp.i=swp.i===v?null:v}
  else if(a==="sok"){if(swp&&swp.o&&swp.i){m.subs=m.subs||[];m.subs.push({t:cur(m),h:(m.phase==="ht"||m.phase==="h2"||m.phase==="ft")?2:1,o:swp.o,i:swp.i});toast("Bytte: "+pn(m,swp.o)+" ut, "+pn(m,swp.i)+" inn");swp=null;save()}}
  else if(a==="dels"){m.subs.splice(+v,1);toast("Bytte slettet");save()}
+ else if(a==="mypw"){const pw=document.getElementById("mypw").value;
+  if(pw.length<8){umsg={t:"err",x:"Passordet må ha minst 8 tegn."}}
+  else{SB.auth.updateUser({password:pw}).then(({error})=>{umsg=error?{t:"err",x:"Kunne ikke bytte passord: "+error.message}:{t:"ok",x:"Passordet er endret."};R()});return}}
+ else if(a==="ugen"){document.getElementById("np").value=gen();return}
+ else if(a==="ugen2"){document.getElementById("upw").value=gen();return}
+ else if(a==="uadd"){const em=document.getElementById("ne").value.trim(),pw=document.getElementById("np").value,r=document.getElementById("nr").value;
+  if(!em||pw.length<8){umsg={t:"err",x:"Fyll inn e-post og et passord på minst 8 tegn."}}
+  else{adm({action:"create",email:em,password:pw,role:r}).then(()=>{umsg={t:"ok",x:"Bruker "+em+" er opprettet. Gi dem passordet; de setter opp tofaktor ved første innlogging."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};R()});return}}
+ else if(a==="upwe"){uedit=v;uarm=null}
+ else if(a==="upwc"){uedit=null}
+ else if(a==="upws"){const pw=document.getElementById("upw").value;
+  if(pw.length<8){umsg={t:"err",x:"Passordet må ha minst 8 tegn."}}
+  else{adm({action:"setPassword",id:v,password:pw}).then(()=>{uedit=null;umsg={t:"ok",x:"Passordet er endret. Gi det nye passordet til brukeren."};R()}).catch(x=>{umsg={t:"err",x:x.message};R()});return}}
+ else if(a==="udel"||a==="u2fa"){const k=a+":"+v;
+  if(uarm!==k){uarm=k;R();setTimeout(()=>{if(uarm===k){uarm=null;R()}},4000);return}
+  uarm=null;adm({action:a==="udel"?"delete":"reset2fa",id:v}).then(()=>{umsg={t:"ok",x:a==="udel"?"Bruker slettet.":"Tofaktor nullstilt. Brukeren setter opp ny ved neste innlogging."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};R()});return}
  else if(a==="undo"){const e=m.events.pop();if(e)toast("Angret "+e.e);save()}
  else if(a==="ph1"||a==="ph2"){const f=a==="ph1";m.marks[f?"h1s":"h2s"]=cur(m);m.phase=f?"h1":"h2";m.startedAt=Date.now();m.running=true;save()}
  else if(a==="pe1"||a==="pe2"||a==="end"){dlg=a}
@@ -268,7 +298,8 @@ document.addEventListener("click",ev=>{
  R();
 });
 document.addEventListener("input",e=>{if(e.target.id==="opp")opp=e.target.value});
-document.addEventListener("change",e=>{const t=e.target;if(t.id==="mt"){mlen=+t.value;R();return}
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset.uid){adm({action:"setRole",id:t.dataset.uid,role:t.value}).then(()=>{umsg={t:"ok",x:"Rolle oppdatert."};return loadUsers()}).catch(x=>{umsg={t:"err",x:x.message};return loadUsers()});return}
+if(t.id==="mt"){mlen=+t.value;R();return}
 if(t.id==="rsel"){rep=t.value;R();return}
  if(t.dataset.eid){const d=db.evs.find(x=>x.id===t.dataset.eid);if(!d)return;const f=t.dataset.f;
   if(f==="g")d.g=t.checked;else if(f==="k")d.k=t.value;else{const v=t.value.trim();if(!v){t.value=d[f];return}d[f]=v}save();toast("Lagret")}});
@@ -296,6 +327,16 @@ document.addEventListener("mousemove",e=>{if(!dg||dg.tm)return;if(!dg.on){if(Mat
 document.addEventListener("mouseup",e=>{if(dg&&!dg.tm)dEnd(e.clientX,e.clientY)});
 document.addEventListener("contextmenu",e=>{if(dTile(e))e.preventDefault()});
 
+const gen=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=new Uint32Array(14);crypto.getRandomValues(a);return Array.from(a,x=>c[x%c.length]).join("")};
+async function adm(body){
+ const {data,error}=await SB.functions.invoke("admin-users",{body});
+ if(error){let m=error.message;try{const j=await error.context.json();if(j&&j.error)m=j.error}catch(e){}throw new Error(m)}
+ if(data&&data.error)throw new Error(data.error);return data}
+async function loadUsers(){
+ if(role!=="admin"){R();return}
+ const {data,error}=await SB.from("profiles").select("id,email,role,created_at").order("email");
+ if(error){ulist=[];umsg={t:"err",x:"Kunne ikke hente brukere: "+error.message}}else ulist=data;
+ R()}
 const A=()=>document.getElementById("app");
 const box=h=>{A().innerHTML=`<div class="card lg"><div class="brand" style="margin-bottom:12px"><div class="crest">U</div><div class="wm">Urædd<small>Håndball gutter · kampføring</small></div></div>${h}</div>`};
 function LOGIN(msg,em){
@@ -328,7 +369,10 @@ async function start(){
  const {data,error}=await SB.from("team_data").select("data").eq("id",1).maybeSingle();
  if(error)return LOGIN("Kunne ikke hente data: "+error.message);
  if(data&&data.data)db=data.data;
- norm();tab=(db.match||db.players.length)?"match":"players";R();
+ norm();
+ try{const {data:{user}}=await SB.auth.getUser();me=user;
+  const {data:pr}=await SB.from("profiles").select("role").eq("id",user.id).maybeSingle();role=pr?pr.role:null}catch(e){role=null}
+ tab=(db.match||db.players.length)?"match":"players";R();
 }
 async function boot(){
  if(SB_URL.includes("DITT-PROSJEKT"))return box('<p class="err">Fyll inn Supabase-URL og nøkkel øverst i filen før du bruker appen.</p>');
